@@ -1,0 +1,72 @@
+# Bỏ qua môi trường ảo Python
+.venv/
+venv/
+env/
+ENV/
+
+# Bỏ qua file biên dịch Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bỏ qua file log, cache, dữ liệu tạm
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Bỏ qua thư mục của công cụ build/distribution
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+
+# Bỏ qua file cài đặt môi trường
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Bỏ qua file của IDE/editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Bỏ qua file test
+.coverage
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+
+# Bỏ qua file môi trường và cấu hình riêng
+.env
+.env.*
+*.env
+*.ini
+*.cfg
+*.toml
+*.yaml
+*.yml
+
+# Bỏ qua notebook output
+.ipynb_checkpoints
+
+# Bỏ qua các file hệ thống
+.DS_Store
+Thumbs.db
+
