@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - kafka-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "${kafka_port}:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Listen cả trong và ngoài container
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+
+      # Advertise địa chỉ cho cả network nội bộ và host ngoài Docker
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - kafka-net
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "${db_port}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${db_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${db_password}
+    volumes:
+      - ./mongo-data:/data/db
+    restart: always
+    networks:
+      - kafka-net
+
+  pyspark:
+    build: ./Consumer-Producer
+    container_name: pyspark-jupyter
+    depends_on:
+      - kafka
+    ports:
+      - "${pyspark_port}:8888"
+    volumes:
+      - ./Consumer-Producer/notebooks:/home/notebooks
+    environment:
+      - PYSPARK_PYTHON=python3
+      - PYSPARK_DRIVER_PYTHON=jupyter
+      - PYSPARK_DRIVER_PYTHON_OPTS=notebook --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token=''
+    networks:
+      - kafka-net
+
+networks:
+  kafka-net:
+    driver: bridge
