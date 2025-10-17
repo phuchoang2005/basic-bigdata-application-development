@@ -1,0 +1,19 @@
+{
+  "name": "PySpark + Kafka Dev + MongoDB",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "pyspark",
+  "workspaceFolder": "/home/notebooks",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "mongodb.mongodb-vscode",
+        "albert.tabout",
+        "vscodevim.vim",
+        "mechatroner.rainbow-csv",
+        "sherloach.solarized-osaka"
+      ]
+    }
+  }
+}
