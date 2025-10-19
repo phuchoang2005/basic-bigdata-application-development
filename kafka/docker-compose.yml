@@ -43,7 +43,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${db_password}
     volumes:
       - ./mongo-data:/data/db
-    restart: always
+    restart: "no"
     networks:
       - kafka-net
 
