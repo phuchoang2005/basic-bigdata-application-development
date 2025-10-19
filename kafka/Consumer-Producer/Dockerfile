@@ -17,16 +17,7 @@ RUN curl -fsSL https://repo.scala-sbt.org/scalasbt/debian/sbt-1.9.8.deb -o sbt.d
 
 
 # Cài thêm gói cần thiết
-RUN pip install pymongo
-RUN pip install findspark
-RUN pip install pyspark
-RUN pip install kafka-python
-RUN pip install pyarrow
-RUN pip install pandas
-
-# (tuỳ chọn) tải Kafka connector .jar nếu không có internet trong container
-# RUN mkdir -p /usr/local/spark/jars && \
-#     wget -q https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.5.0/spark-sql-kafka-0-10_2.12-3.5.0.jar -O /usr/local/spark/jars/spark-sql-kafka.jar && \
-#     wget -q https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.5.0/kafka-clients-3.5.0.jar -O /usr/local/spark/jars/kafka-clients.jar
+COPY requirement.txt .
+RUN pip install -r requirement.txt
 
 WORKDIR /home/notebooks

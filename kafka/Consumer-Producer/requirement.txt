@@ -1,0 +1,15 @@
+pymongo
+findspark
+pyspark
+kafka-python
+pyarrow
+pandas
+confluent_kafka
+kafka-python 
+opencv-contrib-python 
+Flask
+scikit-learn
+confluent-kafka
+slackclient
+python-dotenv
+joblib
