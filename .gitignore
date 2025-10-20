@@ -71,3 +71,6 @@ Thumbs.db
 
 # Skip database
 mongo-data/
+
+# Skip video
+*.mov
