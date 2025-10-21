@@ -63,23 +63,21 @@ services:
     restart: no
     networks:
       - kafka-net
-
   pyspark:
-    build: ./Consumer-Producer
+    build: .
     container_name: pyspark-jupyter
     depends_on:
       - kafka
     ports:
       - "${pyspark_port}:8888"
     volumes:
-      - ./Consumer-Producer/notebooks:/home/notebooks
+      - ./notebooks:/home/notebooks
     environment:
       - PYSPARK_PYTHON=python3
       - PYSPARK_DRIVER_PYTHON=jupyter
       - PYSPARK_DRIVER_PYTHON_OPTS=notebook --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token=''
     networks:
       - kafka-net
-
 networks:
   kafka-net:
     driver: bridge

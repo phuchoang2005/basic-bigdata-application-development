@@ -39,7 +39,7 @@ def publish_video(video_file):
     video.release()
     print('publish complete')
 try:
-    video_path="IMG_6589.MOV"
+    video_path="video.MOV"
     publish_video(video_path)
 except KeyboardInterrupt:
     print("Break\n")

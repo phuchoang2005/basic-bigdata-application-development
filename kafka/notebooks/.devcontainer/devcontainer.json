@@ -1,6 +1,6 @@
 {
   "name": "PySpark + Kafka Dev + MongoDB",
-  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeFile": "docker-compose.yml",
   "service": "pyspark",
   "workspaceFolder": "/home/notebooks",
   "customizations": {
