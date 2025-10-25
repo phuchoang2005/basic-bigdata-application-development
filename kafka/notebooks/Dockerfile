@@ -15,9 +15,11 @@ RUN curl -fsSL https://repo.scala-sbt.org/scalasbt/debian/sbt-1.9.8.deb -o sbt.d
     apt-get install -y ./sbt.deb && \
     rm sbt.deb
 
-
 # Cài thêm gói cần thiết
 COPY requirement.txt .
+
+RUN apt-get update && apt-get install -y build-essential python3-dev
+RUN pip install --upgrade pip setuptools wheel cython
 RUN pip install -r requirement.txt
 
 WORKDIR /home/notebooks
