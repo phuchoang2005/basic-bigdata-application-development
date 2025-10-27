@@ -74,3 +74,6 @@ mongo-data/
 
 # Skip video
 *.mov
+
+# skip model
+*.joblib
