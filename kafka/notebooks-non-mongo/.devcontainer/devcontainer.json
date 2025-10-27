@@ -1,0 +1,19 @@
+{
+  "name": "My Dev Container",
+  "dockerComposeFile": "../docker-compose.yml",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "extensions": [
+          "ms-python.python",
+          "ms-toolsai.jupyter",
+          "ms-toolsai.vscode-jupyter-cell-tags",
+          "ms-toolsai.jupyter-keymap",
+          "esbenp.prettier-vscode"
+        ]
+      }
+    }
+  },
+  "service": "pyspark-app",
+  "workspaceFolder": "/home/code"
+}
