@@ -1,7 +1,0 @@
-{
-  "name": "PySpark Jupyter DevContainer",
-  "dockerComposeFile": "../docker-compose.yml",
-  "workspaceFolder": "/home/code",
-  "extensions": ["ms-python.python", "ms-toolsai.jupyter"],
-  "service": "pyspark-app"
-}
