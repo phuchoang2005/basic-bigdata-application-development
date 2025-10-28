@@ -60,7 +60,6 @@ htmlcov/
 *.ini
 *.cfg
 *.toml
-*.yaml
 
 # Bỏ qua notebook output
 .ipynb_checkpoints
