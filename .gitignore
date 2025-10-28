@@ -77,3 +77,4 @@ mongo-data/
 
 # skip model
 *.joblib
+*.pt
