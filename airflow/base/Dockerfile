@@ -64,6 +64,8 @@ USER root
 COPY projects/absa_streaming /opt/airflow/projects/absa_streaming
 RUN find /opt/airflow/projects/absa_streaming/scripts -type f -name "*.sh" -exec chmod +x {} \;
 
+COPY models /opt/airflow/models
+
 USER airflow
 
 # ------------------------------------------------------------
