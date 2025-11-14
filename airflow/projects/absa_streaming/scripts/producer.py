@@ -7,15 +7,18 @@
 # Producer đọc dữ liệu từ file "test_data.csv"
 # và gửi từng dòng dữ liệu lên Kafka topic "absa-reviews".
 
+import json
+import time
+
+import pandas as pd
 from kafka import KafkaProducer
 from kafka.admin import KafkaAdminClient, NewTopic
 from kafka.errors import TopicAlreadyExistsError
-import json, time, pandas as pd
 
 # --- Cấu hình ---
 KAFKA_SERVER = "kafka:9092"  # dùng hostname trong docker network
 TOPIC = "absa-reviews"
-CSV_PATH = "/opt/airflow/projects/absa_streaming/data/test_data.csv"
+CSV_PATH = "/opt/projects/data/test_data.csv"
 DELAY = 1.0  # giây giữa mỗi message
 
 # --- Đảm bảo topic tồn tại ---
@@ -37,7 +40,7 @@ finally:
 # --- Khởi tạo Producer ---
 producer = KafkaProducer(
     bootstrap_servers=KAFKA_SERVER,
-    value_serializer=lambda v: json.dumps(v).encode("utf-8")
+    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
 )
 
 # --- Đọc dữ liệu ---
@@ -49,7 +52,7 @@ for i, row in df.iterrows():
     text = row["text"] if "text" in row else row.iloc[0]
     msg = {"id": int(i), "review": text}
     producer.send(TOPIC, msg)
-    print(f"[{i+1}/{len(df)}] Sent → {msg}")
+    print(f"[{i + 1}/{len(df)}] Sent → {msg}")
     time.sleep(DELAY)
 
 producer.flush()

@@ -59,7 +59,7 @@ with DAG(
         # Thay thế bằng lệnh chính xác của bạn trong script run_consumer.sh
         command="spark-submit \
             --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar,/opt/spark/jars/kafka-clients-3.6.1.jar,/opt/spark/jars/postgresql-42.6.0.jar \
-            /opt/airflow/projects/absa_streaming/scripts/consumer_postgres_streaming.py",
+            /opt/projects/absa_streaming/scripts/consumer_postgres_streaming.py",
         # 3. Kết nối vào network của docker-compose
         # THAY 'your-project_default' bằng tên network thật (chạy 'docker network ls')
         network_mode="absa_network",
@@ -72,7 +72,7 @@ with DAG(
         volumes=[
             f"{PROJECT_PATH}:/opt/project",
             f"{CHECKPOINT_PATH}:/opt/airflow/checkpoints/absa_streaming_checkpoint",
-            f"{AIRFLOW_PROJ_DIR}/models:/opt/models",
+            f"{AIRFLOW_PROJ_DIR}/models:/opt/project/models",
         ],
         # 7. Giữ lại các cài đặt timeout và retry
         retries=5,

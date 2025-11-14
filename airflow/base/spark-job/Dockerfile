@@ -21,7 +21,7 @@ RUN apt-get update && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set JAVA_HOME
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV JAVA_HOME=/usr/lib/jvm/temurin-17-jre-amd64
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Cài đặt Spark Jars (cho Kafka và Postgres)

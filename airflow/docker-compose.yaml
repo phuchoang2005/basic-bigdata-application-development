@@ -46,6 +46,8 @@ services:
       retries: 5
       start_period: 5s
     restart: no
+    networks:
+      - absa_network
     deploy:
       resources:
         limits:
@@ -67,6 +69,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - absa_network
     deploy:
       resources:
         limits:
@@ -95,6 +99,8 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - absa_network
     deploy:
       resources:
         limits:
@@ -117,6 +123,8 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ""
     user: "0:0"
+    networks:
+      - absa_network
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
 
@@ -131,6 +139,8 @@ services:
       - bash
       - -c
       - airflow
+    networks:
+      - absa_network
 
   streamlit:
     image: airflow-base-local
@@ -155,6 +165,8 @@ services:
       resources:
         limits:
           memory: 512M
+    networks:
+      - absa_network
 
   zookeeper:
     image: zookeeper:3.8
@@ -166,6 +178,8 @@ services:
       resources:
         limits:
           memory: 256M
+    networks:
+      - absa_network
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -188,6 +202,8 @@ services:
         limits:
           memory: 512M # Giới hạn tổng container, KAFKA_HEAP_OPTS giới hạn JVM
           # THÊM MỚI: Service "giả" này chỉ để build image spark-job
+    networks:
+      - absa_network
 
   spark-job-builder:
     build:
@@ -195,6 +211,8 @@ services:
       dockerfile: Dockerfile
     image: spark-cnn-job
     command: ["echo", "Spark job image built"]
+    networks:
+      - absa_network
 
 volumes:
   postgres-db-volume:
