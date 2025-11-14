@@ -1,0 +1,16 @@
+# Yêu cầu torch chỉ cài bản CPU, nhẹ hơn rất nhiều
+torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+
+# Libs cho Spark
+pyspark==3.5.1
+
+# Libs cho ML/Data
+pandas==2.3.3
+numpy==1.26.4
+scikit-learn==1.7.2
+tqdm==4.67.1
+
+# Libs kết nối (Spark job cũng cần kết nối DB/Kafka)
+kafka-python==2.0.1
+psycopg2-binary==2.9.9
+six==1.16.0
