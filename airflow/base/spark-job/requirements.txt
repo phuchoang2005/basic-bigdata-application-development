@@ -1,6 +1,3 @@
-# Yêu cầu torch chỉ cài bản CPU, nhẹ hơn rất nhiều
-torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
-
 # Libs cho Spark
 pyspark==3.5.1
 

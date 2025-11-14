@@ -25,10 +25,6 @@ x-airflow-common: &airflow-common
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming/scripts:/opt/airflow/projects/absa_streaming/scripts
-    - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming/data:/opt/airflow/projects/absa_streaming/data
-    - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects/absa_streaming
-    - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
     postgres:
@@ -90,12 +86,11 @@ services:
       - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
       - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
       - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects/absa_streaming
-      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
       # THÊM MỚI (QUAN TRỌNG): Cho phép Airflow gọi Docker
       - /var/run/docker.sock:/var/run/docker.sock
       # Map code của bạn vào thư mục job (để container job thấy)
       - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/project
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/models
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -200,6 +195,7 @@ services:
       dockerfile: Dockerfile
     image: spark-cnn-job
     command: ["echo", "Spark job image built"]
+
 volumes:
   postgres-db-volume:
 networks:

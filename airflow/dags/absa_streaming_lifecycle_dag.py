@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.providers.docker.operators.docker import DockerOperator  # <-- THÊM MỚI
+from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.utils.dates import days_ago
 
 # === Default parameters ===
@@ -71,8 +71,8 @@ with DAG(
         # Và để Spark đọc được code/model
         volumes=[
             f"{PROJECT_PATH}:/opt/project",
-            f"{CHECKPOINT_PATH}:/opt/airflow/checkpoints",  # <-- Đường dẫn Spark ghi checkpoint
-            f"{AIRFLOW_PROJ_DIR}/models:/opt/project/models",
+            f"{CHECKPOINT_PATH}:/opt/airflow/checkpoints/absa_streaming_checkpoint",
+            f"{AIRFLOW_PROJ_DIR}/models:/opt/models",
         ],
         # 7. Giữ lại các cài đặt timeout và retry
         retries=5,
@@ -91,10 +91,9 @@ with DAG(
         bash_command=(
             "echo '[Cleanup] Removing old checkpoint...'; "
             # Sử dụng biến môi trường để lấy đường dẫn chính xác
-            f"rm -rf {CHECKPOINT_PATH}/absa_streaming_checkpoint || true; "
+            f"rm -rf {CHECKPOINT_PATH} || true; "
             "echo '[Cleanup] Done.'"
         ),
-        # trigger_rule="all_done", # <-- Đã XÓA
     )
 
     # === Task dependency (Flow MỚI) ===

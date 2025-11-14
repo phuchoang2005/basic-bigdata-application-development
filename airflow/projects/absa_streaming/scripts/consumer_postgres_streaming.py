@@ -81,8 +81,8 @@ ASPECTS = [
 SENTIMENTS = ["POS", "NEU", "NEG"]
 
 # Đường dẫn đến model CNN và vocab của bạn
-VOCAB_PATH = "/opt/airflow/models/vocab.json"
-MODEL_PATH = "/opt/airflow/models/cnn_best.pth"  # Đây phải là model CNN
+VOCAB_PATH = "/opt/models/vocab.json"
+MODEL_PATH = "/opt/models/cnn_best.pth"
 
 MAX_LEN = 64  # Max length khi huấn luyện CNN
 EMBED_DIM = 100  # Ví dụ
