@@ -9,7 +9,7 @@
 set -e  # Dừng script ngay nếu có lỗi
 
 echo "[Producer] Starting Kafka Producer..."
-python /opt/airflow/projects/absa_streaming/scripts/producer.py
+python /opt/airflow/projects/scripts/producer.py
 
 status=$?
 if [ $status -eq 0 ]; then

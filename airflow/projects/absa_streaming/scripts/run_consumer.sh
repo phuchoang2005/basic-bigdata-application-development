@@ -12,8 +12,8 @@ set -e
 echo "[Consumer] Starting Spark Structured Streaming job..."
 
 spark-submit \
-  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.6.0 \
-  /opt/airflow/projects/absa_streaming/scripts/consumer_postgres_streaming.py
+  --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar,/opt/spark/jars/kafka-clients-3.6.1.jar,/opt/spark/jars/postgresql-42.6.0.jar \
+  /opt/airflow/projects/scripts/consumer_postgres_streaming.py
 
 status=$?
 if [ $status -eq 0 ]; then

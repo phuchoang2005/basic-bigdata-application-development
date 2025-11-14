@@ -44,7 +44,7 @@ with DAG(
     deploy_producer = BashOperator(
         task_id="deploy_producer",
         # Giả định script này tự động dừng sau 45m hoặc 'timeout' sẽ ngắt nó
-        bash_command=f'bash -c "timeout 45m /opt/airflow/projects/absa_streaming/scripts/run_producer.sh"',
+        bash_command=f'bash -c "timeout 45m /opt/airflow/projects/scripts/run_producer.sh"',
         retries=3,
         execution_timeout=timedelta(minutes=50),
     )
@@ -59,7 +59,7 @@ with DAG(
         # Thay thế bằng lệnh chính xác của bạn trong script run_consumer.sh
         command="spark-submit \
             --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar,/opt/spark/jars/kafka-clients-3.6.1.jar,/opt/spark/jars/postgresql-42.6.0.jar \
-            /opt/projects/absa_streaming/scripts/consumer_postgres_streaming.py",
+            /opt/airflow/projects/scripts/consumer_postgres_streaming.py",
         # 3. Kết nối vào network của docker-compose
         # THAY 'your-project_default' bằng tên network thật (chạy 'docker network ls')
         network_mode="absa_network",
@@ -70,9 +70,9 @@ with DAG(
         # 6. Map volumes để Spark ghi checkpoint ra host
         # Và để Spark đọc được code/model
         volumes=[
-            f"{PROJECT_PATH}:/opt/project",
-            f"{CHECKPOINT_PATH}:/opt/airflow/checkpoints/absa_streaming_checkpoint",
-            f"{AIRFLOW_PROJ_DIR}/models:/opt/project/models",
+            f"{PROJECT_PATH}:/opt/airflow/projects",
+            f"{CHECKPOINT_PATH}:/opt/airflow/checkpoints",
+            f"{AIRFLOW_PROJ_DIR}/models:/opt/airflow/models",
         ],
         # 7. Giữ lại các cài đặt timeout và retry
         retries=5,
@@ -86,12 +86,14 @@ with DAG(
 
     # === 4️⃣ Dọn dẹp checkpoint ===
     # Tác vụ này bây giờ chạy sau khi CẢ HAI producer và consumer THÀNH CÔNG
+    # === 4️⃣ Dọn dẹp checkpoint ===
     cleanup_checkpoints = BashOperator(
         task_id="cleanup_checkpoints",
+        # SỬA LẠI LỆNH BASH:
         bash_command=(
             "echo '[Cleanup] Removing old checkpoint...'; "
-            # Sử dụng biến môi trường để lấy đường dẫn chính xác
-            f"rm -rf {CHECKPOINT_PATH} || true; "
+            # Xóa đường dẫn BÊN TRONG container mà Spark đã ghi
+            "rm -rf /opt/airflow/checkpoints/absa_streaming_checkpoint || true; "
             "echo '[Cleanup] Done.'"
         ),
     )

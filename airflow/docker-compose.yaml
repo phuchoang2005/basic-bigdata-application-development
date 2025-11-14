@@ -93,8 +93,8 @@ services:
       # THÊM MỚI (QUAN TRỌNG): Cho phép Airflow gọi Docker
       - /var/run/docker.sock:/var/run/docker.sock
       # Map code của bạn vào thư mục job (để container job thấy)
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/project
-      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/models
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming/:/opt/airflow/projects
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -149,12 +149,12 @@ services:
       [
         "bash",
         "-c",
-        "streamlit run /opt/airflow/projects/absa_streaming/streamlit/streamlit_app.py --server.port 8501 --server.address 0.0.0.0",
+        "streamlit run /opt/airflow/projects/streamlit/streamlit_app.py --server.port 8501 --server.address 0.0.0.0",
       ]
     ports:
       - "8501:8501"
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects/absa_streaming
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects/
       - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
     depends_on:
       airflow-webserver:

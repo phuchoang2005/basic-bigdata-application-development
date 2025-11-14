@@ -5,4 +5,6 @@ docker compose run --rm \
     spark-job-builder \
     spark-submit \
         --master local[*] \
-        /opt/airflow/projects/scripts/producer.py
+        --jars /opt/spark/jars/spark-sql-kafka-0-10_2.13-3.5.2.jar,/opt/spark/jars/postgresql-42.6.0.jar \
+        /opt/airflow/projects/scripts/test.py
+

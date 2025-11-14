@@ -1,11 +1,12 @@
 # Libs cho Spark
-pyspark==3.5.1
+pyspark==3.5.2
 
 # Libs cho ML/Data
 pandas==2.3.3
 numpy==1.26.4
 scikit-learn==1.7.2
 tqdm==4.67.1
+pyarrow==14.0.2
 
 # Libs kết nối (Spark job cũng cần kết nối DB/Kafka)
 kafka-python==2.0.1

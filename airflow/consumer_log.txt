@@ -1,0 +1,104 @@
+25/11/14 15:48:46 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+====================================================
+===   BÀI KIỂM TRA TẢI FILE JAR KAFKA CỦA SPARK   ===
+====================================================
+
+[BƯỚC 1] Khởi tạo SparkSession...
+25/11/14 15:48:48 INFO SparkContext: Running Spark version 3.5.1
+25/11/14 15:48:48 INFO SparkContext: OS info Linux, 6.11.11-linuxkit, amd64
+25/11/14 15:48:48 INFO SparkContext: Java version 17.0.17
+25/11/14 15:48:48 INFO ResourceUtils: ==============================================================
+25/11/14 15:48:48 INFO ResourceUtils: No custom resources configured for spark.driver.
+25/11/14 15:48:48 INFO ResourceUtils: ==============================================================
+25/11/14 15:48:48 INFO SparkContext: Submitted application: CheckJarAvailability
+25/11/14 15:48:48 INFO ResourceProfile: Default ResourceProfile created, executor resources: Map(cores -> name: cores, amount: 1, script: , vendor: , memory -> name: memory, amount: 1024, script: , vendor: , offHeap -> name: offHeap, amount: 0, script: , vendor: ), task resources: Map(cpus -> name: cpus, amount: 1.0)
+25/11/14 15:48:48 INFO ResourceProfile: Limiting resource is cpu
+25/11/14 15:48:48 INFO ResourceProfileManager: Added ResourceProfile id: 0
+25/11/14 15:48:48 INFO SecurityManager: Changing view acls to: root
+25/11/14 15:48:48 INFO SecurityManager: Changing modify acls to: root
+25/11/14 15:48:48 INFO SecurityManager: Changing view acls groups to: 
+25/11/14 15:48:48 INFO SecurityManager: Changing modify acls groups to: 
+25/11/14 15:48:48 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: root; groups with view permissions: EMPTY; users with modify permissions: root; groups with modify permissions: EMPTY
+25/11/14 15:48:48 INFO Utils: Successfully started service 'sparkDriver' on port 40761.
+25/11/14 15:48:48 INFO SparkEnv: Registering MapOutputTracker
+25/11/14 15:48:48 INFO SparkEnv: Registering BlockManagerMaster
+25/11/14 15:48:48 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+25/11/14 15:48:48 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+25/11/14 15:48:48 INFO SparkEnv: Registering BlockManagerMasterHeartbeat
+25/11/14 15:48:48 INFO DiskBlockManager: Created local directory at /tmp/blockmgr-750af869-6655-4204-90db-654f86a509a8
+25/11/14 15:48:48 INFO MemoryStore: MemoryStore started with capacity 434.4 MiB
+25/11/14 15:48:48 INFO SparkEnv: Registering OutputCommitCoordinator
+25/11/14 15:48:48 INFO JettyUtils: Start Jetty 0.0.0.0:4040 for SparkUI
+25/11/14 15:48:49 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+25/11/14 15:48:49 INFO SparkContext: Added JAR file:///opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar at spark://aa619cf350cc:40761/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar with timestamp 1763135328016
+25/11/14 15:48:49 INFO SparkContext: Added JAR file:///opt/spark/jars/kafka-clients-3.6.1.jar at spark://aa619cf350cc:40761/jars/kafka-clients-3.6.1.jar with timestamp 1763135328016
+25/11/14 15:48:49 INFO SparkContext: Added JAR file:///opt/spark/jars/postgresql-42.6.0.jar at spark://aa619cf350cc:40761/jars/postgresql-42.6.0.jar with timestamp 1763135328016
+25/11/14 15:48:49 INFO Executor: Starting executor ID driver on host aa619cf350cc
+25/11/14 15:48:49 INFO Executor: OS info Linux, 6.11.11-linuxkit, amd64
+25/11/14 15:48:49 INFO Executor: Java version 17.0.17
+25/11/14 15:48:49 INFO Executor: Starting executor with user classpath (userClassPathFirst = false): ''
+25/11/14 15:48:49 INFO Executor: Created or updated repl class loader org.apache.spark.util.MutableURLClassLoader@4e58dd63 for default.
+25/11/14 15:48:49 INFO Executor: Fetching spark://aa619cf350cc:40761/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar with timestamp 1763135328016
+25/11/14 15:48:49 INFO TransportClientFactory: Successfully created connection to aa619cf350cc/172.19.0.8:40761 after 53 ms (0 ms spent in bootstraps)
+25/11/14 15:48:49 INFO Utils: Fetching spark://aa619cf350cc:40761/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar to /tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/userFiles-9fbc7b7f-e2d2-4b5d-b295-023fe6ce0d47/fetchFileTemp11607314198031230286.tmp
+25/11/14 15:48:49 INFO Executor: Adding file:/tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/userFiles-9fbc7b7f-e2d2-4b5d-b295-023fe6ce0d47/spark-sql-kafka-0-10_2.12-3.5.1.jar to class loader default
+25/11/14 15:48:49 INFO Executor: Fetching spark://aa619cf350cc:40761/jars/kafka-clients-3.6.1.jar with timestamp 1763135328016
+25/11/14 15:48:49 INFO Utils: Fetching spark://aa619cf350cc:40761/jars/kafka-clients-3.6.1.jar to /tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/userFiles-9fbc7b7f-e2d2-4b5d-b295-023fe6ce0d47/fetchFileTemp10630661135939937844.tmp
+25/11/14 15:48:49 INFO Executor: Adding file:/tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/userFiles-9fbc7b7f-e2d2-4b5d-b295-023fe6ce0d47/kafka-clients-3.6.1.jar to class loader default
+25/11/14 15:48:49 INFO Executor: Fetching spark://aa619cf350cc:40761/jars/postgresql-42.6.0.jar with timestamp 1763135328016
+25/11/14 15:48:49 INFO Utils: Fetching spark://aa619cf350cc:40761/jars/postgresql-42.6.0.jar to /tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/userFiles-9fbc7b7f-e2d2-4b5d-b295-023fe6ce0d47/fetchFileTemp17936371676410479987.tmp
+25/11/14 15:48:49 INFO Executor: Adding file:/tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/userFiles-9fbc7b7f-e2d2-4b5d-b295-023fe6ce0d47/postgresql-42.6.0.jar to class loader default
+25/11/14 15:48:49 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 36353.
+25/11/14 15:48:49 INFO NettyBlockTransferService: Server created on aa619cf350cc:36353
+25/11/14 15:48:49 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+25/11/14 15:48:49 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, aa619cf350cc, 36353, None)
+25/11/14 15:48:49 INFO BlockManagerMasterEndpoint: Registering block manager aa619cf350cc:36353 with 434.4 MiB RAM, BlockManagerId(driver, aa619cf350cc, 36353, None)
+25/11/14 15:48:49 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, aa619cf350cc, 36353, None)
+25/11/14 15:48:49 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, aa619cf350cc, 36353, None)
+[BƯỚC 1] Khởi tạo SparkSession thành công.
+
+[BƯỚC 2] Lấy kết nối tới máy ảo Java (JVM)...
+[BƯỚC 2] Lấy kết nối JVM thành công.
+
+[BƯỚC 3] Thử tải class: org.apache.spark.kafka010.KafkaConfigUpdater
+
+====================================================
+❌ THẤT BẠI! Class không được tìm thấy.
+Điều này 100% xác nhận cờ --jars của bạn BỊ SAI hoặc BỊ THIẾU.
+
+Chi tiết lỗi từ Java:
+An error occurred while calling z:java.lang.Class.forName.
+: java.lang.ClassNotFoundException: org.apache.spark.kafka010.KafkaConfigUpdater
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(Unknown Source)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.ClassLoader.loadClass(Unknown Source)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Unknown Source)
+
+====================================================
+25/11/14 15:48:50 INFO SparkContext: SparkContext is stopping with exitCode 0.
+25/11/14 15:48:50 INFO SparkUI: Stopped Spark web UI at http://aa619cf350cc:4040
+25/11/14 15:48:50 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+25/11/14 15:48:50 INFO MemoryStore: MemoryStore cleared
+25/11/14 15:48:50 INFO BlockManager: BlockManager stopped
+25/11/14 15:48:50 INFO BlockManagerMaster: BlockManagerMaster stopped
+25/11/14 15:48:50 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+25/11/14 15:48:50 INFO SparkContext: Successfully stopped SparkContext
+Bài kiểm tra kết thúc.
+25/11/14 15:48:50 INFO ShutdownHookManager: Shutdown hook called
+25/11/14 15:48:50 INFO ShutdownHookManager: Deleting directory /tmp/spark-897801f0-2443-4b7d-999c-43c97619f249
+25/11/14 15:48:50 INFO ShutdownHookManager: Deleting directory /tmp/spark-897801f0-2443-4b7d-999c-43c97619f249/pyspark-bee4e942-acfc-4509-be88-8986acc05f5d
+25/11/14 15:48:50 INFO ShutdownHookManager: Deleting directory /tmp/spark-87c865bb-1da6-4bb7-b104-4f8ff3a49331
+
