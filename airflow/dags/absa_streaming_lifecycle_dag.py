@@ -22,11 +22,6 @@ default_args = {
 
 # === Biến cục bộ (Host path) ===
 # Cần map thư mục này vào DockerOperator
-# ${AIRFLOW_PROJ_DIR:-.} là biến môi trường bạn định nghĩa trong docker-compose
-AIRFLOW_PROJ_DIR = os.environ.get("AIRFLOW_PROJ_DIR", ".")
-CHECKPOINT_PATH = f"{AIRFLOW_PROJ_DIR}/checkpoints"
-PROJECT_PATH = f"{AIRFLOW_PROJ_DIR}/projects/absa_streaming"
-
 # === DAG definition ===
 with DAG(
     dag_id="absa_streaming_lifecycle_demo",
@@ -58,8 +53,8 @@ with DAG(
         # 2. Lệnh spark-submit (giả định)
         # Thay thế bằng lệnh chính xác của bạn trong script run_consumer.sh
         command="spark-submit \
-            --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.1.jar,/opt/spark/jars/kafka-clients-3.6.1.jar,/opt/spark/jars/postgresql-42.6.0.jar \
-            /opt/airflow/projects/scripts/consumer_postgres_streaming.py",
+        --jars /opt/spark/jars/spark-sql-kafka-0-10_2.13-3.5.2.jar,/opt/spark/jars/postgresql-42.6.0.jar \
+        /opt/spark-jobs/projects/scripts/consumer_postgres_streaming.py",
         # 3. Kết nối vào network của docker-compose
         # THAY 'your-project_default' bằng tên network thật (chạy 'docker network ls')
         network_mode="absa_network",
@@ -67,13 +62,6 @@ with DAG(
         auto_remove=True,
         # 5. Cần thiết để Airflow gọi Docker
         docker_url="unix://var/run/docker.sock",
-        # 6. Map volumes để Spark ghi checkpoint ra host
-        # Và để Spark đọc được code/model
-        volumes=[
-            f"{PROJECT_PATH}:/opt/airflow/projects",
-            f"{CHECKPOINT_PATH}:/opt/airflow/checkpoints",
-            f"{AIRFLOW_PROJ_DIR}/models:/opt/airflow/models",
-        ],
         # 7. Giữ lại các cài đặt timeout và retry
         retries=5,
         retry_delay=timedelta(minutes=2),

@@ -1,8 +1,5 @@
 docker compose run --rm \
-    -v ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects \
-    -v ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models \
-    -v ${AIRFLOW_PROJ_DIR:-.}/checkpoints:/opt/airflow/checkpoints \
     spark-job-builder \
     spark-submit \
         --master local[*] \
-        /opt/airflow/projects/scripts/producer.py
+        /opt/spark-jobs/projects/scripts/producer.py

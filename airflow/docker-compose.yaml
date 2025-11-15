@@ -4,8 +4,8 @@
 
 x-airflow-common: &airflow-common
   build:
-    context: ./base/airflow
-    dockerfile: Dockerfile
+    context: ./
+    dockerfile: base/airflow/Dockerfile
   image: airflow-base-local
   networks:
     - absa_network
@@ -207,8 +207,12 @@ services:
 
   spark-job-builder:
     build:
-      context: ./base/spark-job
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: base/spark-job/Dockerfile
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/spark-jobs/projects
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/spark-jobs/models
+      - ${AIRFLOW_PROJ_DIR:-.}/checkpoints:/opt/spark-jobs/checkpoints
     image: spark-cnn-job
     command: ["echo", "Spark job image built"]
     networks:

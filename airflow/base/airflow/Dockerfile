@@ -2,7 +2,7 @@
 FROM apache/airflow:2.9.0
 
 # Copy file requirements của Airflow/Streamlit
-COPY requirements.txt /tmp/requirements.txt
+COPY base/airflow/requirements.txt /tmp/requirements.txt
 
 # Cài đặt với user airflow
 USER airflow

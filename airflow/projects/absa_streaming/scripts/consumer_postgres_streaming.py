@@ -224,8 +224,21 @@ def create_spark_session() -> SparkSession:
     spark = (
         SparkSession.builder.appName("Kafka_ABSA_Postgres_CNN")
         .config("spark.sql.streaming.checkpointLocation", CHECKPOINT_PATH)
+        .config(
+            "spark.jars.packages",
+            ",".join(
+                [
+                    "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.2",
+                    "org.apache.spark:spark-token-provider-kafka-0-10_2.12:3.5.2",
+                    "org.apache.kafka:kafka-clients:3.5.1",
+                    "org.apache.commons:commons-pool2:2.12.0",
+                    "org.postgresql:postgresql:42.6.0",
+                ]
+            ),
+        )
         .getOrCreate()
     )
+
     spark.sparkContext.setLogLevel("WARN")
     print("Pipeline: Tạo Spark session thành công.")
     return spark
