@@ -1,39 +1,47 @@
-# Phiên bản đã tối ưu cho máy cấu hình yếu
-# THAY ĐỔI QUAN TRỌNG: Chuyển từ CeleryExecutor sang LocalExecutor
-# -> Loại bỏ nhu cầu về Redis, Airflow-Worker, và Flower.
-
-x-airflow-common: &airflow-common
+x-airflow-common:
+  &airflow-common
   build:
-    context: ./base/airflow
-    dockerfile: Dockerfile
-  image: airflow-base-local
-  networks:
-    - absa_network
-  environment: &airflow-common-env # THAY ĐỔI: Chuyển sang LocalExecutor
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    # THAY ĐỔI: Postgres vẫn là metadata db, nhưng không cần Celery/Redis
+    context: ./
+    dockerfile: base/airflow/Dockerfile
+  image: airflow-base:2.9.0-custom
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-    AIRFLOW__CORE__FERNET_KEY: ""
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
-    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
-    AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
-    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
-    TZ: Asia/Ho_Chi_Minh
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'        # tắt examples để DB nhẹ
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Ho_Chi_Minh
+    TZ: Asia/Ho_Chi_Minh
+
+    # Dev-friendly limits (tune theo máy của bạn)
+    AIRFLOW__CORE__PARALLELISM: '4'               # tổng tasks song song
+    AIRFLOW__CORE__DAG_CONCURRENCY: '2'
+    AIRFLOW__CELERY__WORKER_CONCURRENCY: '1'      # mỗi worker chạy 1 task
   volumes:
-    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags:delegated
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects:delegated
+    - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models:delegated
   user: "${AIRFLOW_UID:-50000}:0"
-  depends_on: &airflow-common-depends-on
+  depends_on:
+    &airflow-common-depends-on
+    redis:
+      condition: service_healthy
     postgres:
       condition: service_healthy
 
 services:
+  # -------------------------
+  # Databases / Broker (core)
+  # -------------------------
   postgres:
-    # THAY ĐỔI: Dùng image 'alpine' gọn nhẹ hơn
-    image: postgres:13-alpine
+    image: postgres:13
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -45,66 +53,122 @@ services:
       interval: 10s
       retries: 5
       start_period: 5s
-    restart: no
+    restart: unless-stopped
+    # resource hints (tune or remove if unsupported by your compose)
+    mem_limit: 1024m
+    cpus: 0.75
     networks:
-      - absa_network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+      - absa_streaming
 
+  redis:
+    image: redis:8.2.2
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
+    networks:
+      - absa_streaming
+
+  # -------------------------
+  # Airflow core components
+  # -------------------------
   airflow-webserver:
     <<: *airflow-common
     command: webserver
+    profiles:
+      - Infrastructure
     ports:
       - "8080:8080"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 240s
-    restart: always
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    mem_limit: 1024m
+    cpus: 1.0
     networks:
-      - absa_network
-    deploy:
-      resources:
-        limits:
-          memory: 768M
+      - absa_streaming
+
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    profiles:
+      - Infrastructure
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}" || true']
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 240s
-    restart: no
-    volumes:
-      # THÊM MỚI: Mount các volume cũ
-      - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
-      - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
-      - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-      # THÊM MỚI (QUAN TRỌNG): Cho phép Airflow gọi Docker
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Map code của bạn vào thư mục job (để container job thấy)
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming/:/opt/airflow/projects
-      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    mem_limit: 512m
+    cpus: 0.5
     networks:
-      - absa_network
-    deploy:
-      resources:
-        limits:
-          memory: 768M
+      - absa_streaming
+
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    profiles:
+      - Infrastructure
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || true'
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    mem_limit: 1024m
+    cpus: 1.0
+    networks:
+      - absa_streaming
+
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    profiles:
+      - Infrastructure
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}" || true']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    mem_limit: 256m
+    cpus: 0.25
+    networks:
+      - absa_streaming
 
   airflow-init:
     <<: *airflow-common
@@ -113,77 +177,110 @@ services:
       - -c
       - |
         mkdir -p /sources/logs /sources/dags /sources/plugins
-        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
-        exec /entrypoint airflow version
+        chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins} || true
+        exec /entrypoint airflow db upgrade
     environment:
       <<: *airflow-common-env
-      _AIRFLOW_DB_MIGRATE: "true"
-      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      _PIP_ADDITIONAL_REQUIREMENTS: ""
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
-    networks:
-      - absa_network
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}:/sources
+      - ${AIRFLOW_PROJ_DIR:-.}/dags:/sources/dags
+      - ${AIRFLOW_PROJ_DIR:-.}/plugins:/sources/plugins
+      - ${AIRFLOW_PROJ_DIR:-.}/logs:/sources/logs
+    restart: "no"
+    networks:
+      - absa_streaming
 
   airflow-cli:
     <<: *airflow-common
     profiles:
-      - debug
+      - Infrastructure
+      - Debug
     environment:
       <<: *airflow-common-env
       CONNECTION_CHECK_MAX_COUNT: "0"
     command:
       - bash
       - -c
-      - airflow
+      - "airflow"
     networks:
-      - absa_network
+      - absa_streaming
 
+  # -------------------------
+  # Optional / profile-based services
+  # -------------------------
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    profiles:
+      - extras
+    ports:
+      - "5555:5555"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - absa_streaming
+
+  # Streamlit: don't use the heavy airflow-base image for UI; use lightweight python
   streamlit:
-    image: airflow-base-local
+    build:
+      context: ./
+      dockerfile: base/streamlit
+    image: myorg/streamlit-app:latest
     container_name: streamlit
-    entrypoint:
-      [
-        "bash",
-        "-c",
-        "streamlit run /opt/airflow/projects/streamlit/streamlit_app.py --server.port 8501 --server.address 0.0.0.0",
-      ]
+    profiles:
+      - ui
     ports:
       - "8501:8501"
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects/
-      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming/streamlit:/app/streamlit:delegated
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/app/models:delegated
     depends_on:
       airflow-webserver:
         condition: service_healthy
       airflow-scheduler:
         condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+      airflow-worker:
+        condition: service_healthy
+      airflow-triggerer:
+        condition: service_healthy
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: "0.4"
     networks:
-      - absa_network
+      - absa_streaming
 
+
+  # -------------------------
+  # Kafka stack (profile)
+  # -------------------------
   zookeeper:
     image: zookeeper:3.8
     container_name: zookeeper
+    profiles:
+      - kafka
     ports:
       - "2181:2181"
-    restart: no
-    deploy:
-      resources:
-        limits:
-          memory: 256M
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.25
     networks:
-      - absa_network
+      - absa_streaming
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
+    profiles:
+      - kafka
     ports:
       - "9092:9092"
     environment:
@@ -191,31 +288,42 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # THAY ĐỔI: Giới hạn HEAP cho Kafka JVM. Cảnh báo: 256M rất thấp!
-      KAFKA_HEAP_OPTS: "-Xmx256M -Xms256M"
     depends_on:
       - zookeeper
-    restart: no
-    # THAY ĐỔI: Thêm giới hạn tài nguyên. TỰ ĐIỀU CHỈNH con số này!
-    deploy:
-      resources:
-        limits:
-          memory: 512M # Giới hạn tổng container, KAFKA_HEAP_OPTS giới hạn JVM
-          # THÊM MỚI: Service "giả" này chỉ để build image spark-job
+    restart: unless-stopped
+    mem_limit: 1024m
+    cpus: 0.5
     networks:
-      - absa_network
+      - absa_streaming
 
-  spark-job-builder:
+  # -------------------------
+  # Spark / ML image (profile: spark)
+  # - This service will NOT start by default. Start it explicitly when you need GPU/ML/Spark tasks.
+  # - Keep image lightweight; mount models and jars as needed.
+  # -------------------------
+  spark:
     build:
-      context: ./base/spark-job
-      dockerfile: Dockerfile
-    image: spark-cnn-job
-    command: ["echo", "Spark job image built"]
+      context: ./
+      dockerfile: base/spark-job/Dockerfile
+    image: spark-ml:latest
+    profiles:
+      - spark
+    command: /bin/bash -c "sleep infinity"
+    environment:
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 1g
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/spark-jobs/projects:delegated
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/spark-jobs/models:delegated
+    restart: "no"
+    mem_limit: 2048m
+    cpus: 1.5
     networks:
-      - absa_network
+      - absa_streaming
 
 volumes:
   postgres-db-volume:
+
 networks:
-  absa_network:
+  absa_streaming:
     driver: bridge

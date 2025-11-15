@@ -1,104 +1,48 @@
-Big Data Streaming ABSA System (Airflow – Spark – Kafka – PostgreSQL – Streamlit)
+# Cập nhật hệ thống & Tối ưu hóa Docker
 
+## 1. Tóm tắt thay đổi (Changelog)
 
+### Phân tách Service (Docker Profiles)
 
-Hệ thống xử lý dữ liệu thời gian thực (real-time streaming) cho bài toán phân tích cảm xúc theo chủ đề (Aspect-Based Sentiment Analysis – ABSA). Pipeline sử dụng Kafka để truyền dữ liệu, Spark Structured Streaming để xử lý, Airflow để điều phối, PostgreSQL làm nơi lưu kết quả, và Streamlit để hiển thị dashboard real-time. Sinh viên cần tự build môi trường Docker và chạy hệ thống để quan sát toàn bộ vòng đời của pipeline.
+Để tối ưu hóa tài nguyên, các service đã được chia vào các profile riêng biệt và không khởi động mặc định:
 
+- **Profile `spark`**: Chứa Spark/ML service.
+- **Profile `kafka`**: Chứa Kafka & Zookeeper (dành cho streaming).
+- **Profile `ui`**: Chứa Streamlit dashboard.
+- **Profile `extras`**: Chứa Flower.
 
+### Cấu hình & Hiệu năng (Development)
 
-Hướng dẫn chạy hệ thống:
+- **Airflow Tuning**:
+  - Giảm `PARALLELISM=4` và `WORKER_CONCURRENCY=1` để tiết kiệm CPU/RAM.
+  - `AIRFLOW__CORE__LOAD_EXAMPLES: 'false'` để giảm tải Database.
+- **Resource Limits**: Thiết lập giới hạn `cpus` và `mem_limit` cho các service nặng (Redis, Postgres, Airflow worker).
+- **Image Optimization**: Streamlit chuyển sang dùng `python:3.10-slim` kết hợp mount volume, thay thế cho image `airflow-base` nặng nề.
+- **Docker Behavior**:
+  - Sử dụng `restart: unless-stopped`.
+  - Tinh chỉnh `healthchecks` (giảm `start_period`/`retries`) để khởi động nhanh hơn trong môi trường dev.
+  - `airflow-init` được tối ưu hóa việc mount file.
 
+---
 
+## 2. Hướng dẫn sử dụng (Usage)
 
-1\. Giải nén file project (airflow.zip) vào bất kỳ vị trí nào trên máy (ví dụ D:\\BigData\\airflow\\).
+Dưới đây là các lệnh `docker compose` thường dùng:
 
+### Khởi động Core Airflow (Minimal)
 
+Chỉ chạy các thành phần thiết yếu (Postgres, Redis, Airflow services):
 
-2\. Mở PowerShell và chuyển vào thư mục project:
+```bash
+docker compose --profile Infrastructure up -d
 
-cd D:\\BigData\\airflow
+docker compose --profile Database -d
 
+docker compose --profile kafka up -d
 
+docker compose --profile spark up -d
 
-3\. Build lại toàn bộ image (làm lần đầu):
+docker compose --profile ui up -d
 
-docker compose build --no-cache
-
-
-
-4\. Khởi động toàn bộ hệ thống:
-
-docker compose up -d
-
-
-
-5\. Mở web app để kiểm tra:
-
-\- Airflow Web UI: truy cập http://localhost:8080
-
-&nbsp; Đăng nhập:
-
-&nbsp; username: airflow
-
-&nbsp; password: airflow
-
-&nbsp; Trong Airflow, bật DAG có tên absa\_streaming\_lifecycle\_demo, sau đó trigger thủ công (Run) để khởi động pipeline streaming gồm producer, consumer và các tác vụ giám sát.
-
-
-
-\- Streamlit Dashboard: truy cập http://localhost:8501
-
-&nbsp; Ứng dụng hiển thị kết quả phân tích cảm xúc theo thời gian, theo chủ đề (aspect), và thống kê cảm xúc tổng hợp trong cơ sở dữ liệu. Dữ liệu sẽ tự hiển thị sau từ PostgreSQL.
-
-
-
-6\. Dừng hệ thống:
-
-docker compose down
-
-
-
-Lưu ý:
-
-\- Không đổi tên hoặc di chuyển file docker-compose.yaml ra khỏi thư mục gốc.
-
-\- Không cần tải hoặc import file .tar image. Hệ thống sẽ tự build từ Dockerfile.
-
-\- Lần chạy đầu tiên có thể mất 10-20 phút do Docker tải thư viện.
-
-\- Sau khi khởi động thành công, các container sẽ được lưu trong Docker Desktop.
-
-\- Những lần sau, chỉ cần chạy:
-
-docker compose up -d
-
-
-
-Cấu trúc thư mục chính:
-
-C:\\airflow
-
-│
-
-├── base\\ ← Dockerfile + requirements.txt cho image cơ sở
-
-├── dags\\ ← các file DAG của Airflow
-
-├── models\\ ← mô hình ABSA (.pt) hoặc file dummy để chạy thử
-
-├── projects\\absa\_streaming\\ ← code xử lý producer, consumer, streamlit app
-
-├── logs\\ ← log runtime của Airflow
-
-├── docker-compose.yaml
-
-└── README.md
-
-
-
-Học phần: SE363 – Phát triển ứng dụng trên nền tảng dữ liệu lớn  
-
-Ngành Kỹ thuật phần mềm – Trường Đại học Công nghệ Thông tin, ĐHQG-HCM  
-
-Thực hiện bởi: HopDT – Faculty of Software Engineering, University of Information Technology (FSE-UIT)
-
+docker compose --profile extras up -d
+```
