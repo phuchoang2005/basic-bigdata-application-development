@@ -11,6 +11,7 @@ __pycache__/
 
 # Bỏ qua file log, cache, dữ liệu tạm
 *.log
+/logs
 *.pot
 *.pyc
 *.pyo
@@ -73,6 +74,7 @@ mongo-data/
 
 # Skip video
 *.mov
+
 
 # skip model
 *.joblib

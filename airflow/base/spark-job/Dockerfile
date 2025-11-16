@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:11-jdk
 
 # Install Python 3.11 & dependencies
 # 1. Cài software-properties-common để thêm PPA
@@ -100,6 +100,12 @@ if patched:
 else:
     print("No files patched")
 PY
+
+# ============================
+# Add commons-pool2 2.12.0
+# ============================
+RUN wget -q https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar \
+    -O /opt/spark/jars/commons-pool2-2.12.0.jar
 
 
 CMD ["sleep", "infinity"]

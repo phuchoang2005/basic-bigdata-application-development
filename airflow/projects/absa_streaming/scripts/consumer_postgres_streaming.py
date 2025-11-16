@@ -38,16 +38,22 @@ ASPECTS = [
     "General",
     "Others",
 ]
-SENTIMENTS = ["POS", "NEU", "NEG"]
-
 # Đường dẫn (phải khớp với volumes trong DockerOperator)
-CHECKPOINT_PATH = "/opt/airflow/checkpoints/absa_streaming_checkpoint"
-VOCAB_PATH = "/opt/airflow/models/vocab.json"
-MODEL_PATH = "/opt/airflow/models/cnn_best.pth"
+CHECKPOINT_PATH = "/opt/spark-jobs/checkpoints/absa_streaming_checkpoint"
+VOCAB_PATH = "/opt/spark-jobs/models/vocab.json"
+MODEL_PATH = "/opt/spark-jobs/models/cnn_best.pth"
 
 # Cấu hình model
+# các hằng số (sửa để khớp với training)
+EMBED_DIM = 128  # TRAIN dùng 128
+NUM_FILTERS = 192  # TRAIN dùng 192
+WORD_WINDOW = 5  # kernel size bằng 5
+NUM_CLASSES = 4  # TRAIN dùng 4 labels (0=None,1=Neg,2=Pos,3=Neu)
 MAX_LEN = 64
-EMBED_DIM = 100
+# cập nhật mapping label để decode đúng
+SENTIMENTS = ["NONE", "NEG", "POS", "NEU"]
+# (nếu bạn muốn nhãn khác, hãy đảm bảo thứ tự khớp với label indices dùng lúc train)
+
 DEVICE = "cpu"
 
 # Biến global cho model (dùng trong UDF)
@@ -61,38 +67,55 @@ _model, _vocab = None, None
 
 
 class CNN_ABSAModel(nn.Module):
-    """Định nghĩa kiến trúc mô hình CNN cho ABSA."""
+    """
+    Phiên bản inference tương thích với checkpoint được train:
+    - 1 Conv1d (kernel WORD_WINDOW)
+    - shared_dense (128)
+    - output_heads: ModuleList len=num_aspects, mỗi head Linear(128 -> NUM_CLASSES)
+    - embedding dim = EMBED_DIM
+    """
 
     def __init__(
         self,
         vocab_size,
         embed_dim,
         num_aspects,
-        num_sentiments=3,
-        num_filters=50,
-        kernel_sizes=[3, 4, 5],
+        num_sentiments=NUM_CLASSES,
+        num_filters=NUM_FILTERS,
+        kernel_size=WORD_WINDOW,
     ):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, embed_dim, padding_idx=0)
-        self.convs = nn.ModuleList(
-            [
-                nn.Conv1d(
-                    in_channels=embed_dim, out_channels=num_filters, kernel_size=k
-                )
-                for k in kernel_sizes
-            ]
+        # conv giống training: một conv duy nhất
+        self.conv = nn.Conv1d(
+            in_channels=embed_dim,
+            out_channels=num_filters,
+            kernel_size=kernel_size,
+            padding=int(kernel_size // 2),
         )
-        total_filters = num_filters * len(kernel_sizes)
-        self.dropout = nn.Dropout(0.1)
-        self.head_s = nn.Linear(total_filters, num_aspects * num_sentiments)
+        self.pool = nn.AdaptiveMaxPool1d(1)
+        # dense shared
+        self.shared_dense = nn.Linear(num_filters, 128)
+        self.dropout = nn.Dropout(0.5 if hasattr(self, "dropout_rate") else 0.1)
+        # output heads (mỗi aspect 1 head)
+        self.output_heads = nn.ModuleList(
+            [nn.Linear(128, num_sentiments) for _ in range(num_aspects)]
+        )
 
     def forward(self, input_ids):
-        embedded = self.embedding(input_ids).permute(0, 2, 1)
-        conved = [F.relu(conv(embedded)) for conv in self.convs]
-        pooled = [F.max_pool1d(conv, conv.shape[2]).squeeze(2) for conv in conved]
-        cat = self.dropout(torch.cat(pooled, dim=1))
-        logits_s = self.head_s(cat).view(-1, len(ASPECTS), 3)
-        return logits_s
+        # input_ids: [batch, seq_len]
+        embedded = self.embedding(input_ids).permute(
+            0, 2, 1
+        )  # -> [batch, embed_dim, seq_len]
+        conv_out = tF.relu(self.conv(embedded))  # -> [batch, num_filters, seq_len]
+        pooled = self.pool(conv_out).squeeze(2)  # -> [batch, num_filters]
+        x = tF.relu(self.shared_dense(pooled))  # -> [batch, 128]
+        x = self.dropout(x)
+        outs = [
+            head(x) for head in self.output_heads
+        ]  # list of [batch, num_sentiments]
+        logits = torch.stack(outs, dim=1)  # -> [batch, num_aspects, num_sentiments]
+        return logits
 
 
 def text_to_indices(text: str, vocab: dict, max_len: int) -> list:
@@ -123,11 +146,18 @@ def absa_cnn_infer_and_decode_udf(texts: pd.Series) -> pd.Series:
 
             # 2. Tải model CNN
             print("UDF: Đang tải model CNN...")
+            # khi load model
             _model = CNN_ABSAModel(
-                vocab_size=len(_vocab), embed_dim=EMBED_DIM, num_aspects=len(ASPECTS)
+                vocab_size=len(_vocab),
+                embed_dim=EMBED_DIM,  # 128
+                num_aspects=len(ASPECTS),
+                num_sentiments=NUM_CLASSES,
+                num_filters=NUM_FILTERS,
+                kernel_size=WORD_WINDOW,
             )
             _model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
             _model.to(DEVICE).eval()
+
             print("UDF: Tải model CNN thành công.")
 
         except Exception as e:
@@ -310,6 +340,8 @@ def main():
         df_final = process_stream(df_raw)
         query = start_stream_sink(df_final)
         query.awaitTermination()
+    except KeyboardInterrupt:
+        print("Pipeline has been closed")
     except Exception as e:
         print(f"FATAL ERROR: Pipeline đã bị dừng đột ngột. Lỗi: {e}", file=sys.stderr)
         traceback.print_exc()

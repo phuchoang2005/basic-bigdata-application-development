@@ -1,7 +1,3 @@
-# Phiên bản đã tối ưu cho máy cấu hình yếu
-# THAY ĐỔI QUAN TRỌNG: Chuyển từ CeleryExecutor sang LocalExecutor
-# -> Loại bỏ nhu cầu về Redis, Airflow-Worker, và Flower.
-
 x-airflow-common: &airflow-common
   build:
     context: ./
@@ -9,9 +5,8 @@ x-airflow-common: &airflow-common
   image: airflow-base-local
   networks:
     - absa_network
-  environment: &airflow-common-env # THAY ĐỔI: Chuyển sang LocalExecutor
+  environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    # THAY ĐỔI: Postgres vẫn là metadata db, nhưng không cần Celery/Redis
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__FERNET_KEY: ""
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
@@ -20,7 +15,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
     TZ: Asia/Ho_Chi_Minh
     AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Ho_Chi_Minh
-  volumes:
+  volumes: &airflow-common-volumes
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
@@ -85,16 +80,18 @@ services:
       retries: 5
       start_period: 240s
     restart: no
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW_PROJ_DIR: ${AIRFLOW_PROJ_DIR}
     volumes:
-      # THÊM MỚI: Mount các volume cũ
       - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
       - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+      - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
       - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-      # THÊM MỚI (QUAN TRỌNG): Cho phép Airflow gọi Docker
       - /var/run/docker.sock:/var/run/docker.sock
-      # Map code của bạn vào thư mục job (để container job thấy)
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming/:/opt/airflow/projects
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects
       - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
+      - ${AIRFLOW_PROJ_DIR:-.}/checkpoints:/opt/airflow/checkpoints
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -143,19 +140,22 @@ services:
       - absa_network
 
   streamlit:
-    image: airflow-base-local
+    image: streamlit-image
     container_name: streamlit
+    build:
+      context: .
+      dockerfile: base/streamlit/Dockerfile
     entrypoint:
       [
         "bash",
         "-c",
-        "streamlit run /opt/airflow/projects/streamlit/streamlit_app.py --server.port 8501 --server.address 0.0.0.0",
+        "streamlit run /app/streamlit/projects/streamlit/streamlit_app.py --server.port 8501 --server.address 0.0.0.0",
       ]
     ports:
       - "8501:8501"
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/opt/airflow/projects/
-      - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/airflow/models
+      - ${AIRFLOW_PROJ_DIR:-.}/projects/absa_streaming:/app/streamlit/projects/
+      - ${AIRFLOW_PROJ_DIR:-.}/models:/app/streamlit/models
     depends_on:
       airflow-webserver:
         condition: service_healthy
@@ -177,7 +177,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 800M
     networks:
       - absa_network
 
@@ -191,17 +191,14 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      # THAY ĐỔI: Giới hạn HEAP cho Kafka JVM. Cảnh báo: 256M rất thấp!
-      KAFKA_HEAP_OPTS: "-Xmx256M -Xms256M"
+      KAFKA_HEAP_OPTS: "-Xmx1024M -Xms1024M"
     depends_on:
       - zookeeper
     restart: no
-    # THAY ĐỔI: Thêm giới hạn tài nguyên. TỰ ĐIỀU CHỈNH con số này!
     deploy:
       resources:
         limits:
-          memory: 512M # Giới hạn tổng container, KAFKA_HEAP_OPTS giới hạn JVM
-          # THÊM MỚI: Service "giả" này chỉ để build image spark-job
+          memory: 512M
     networks:
       - absa_network
 
@@ -214,10 +211,7 @@ services:
       - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/spark-jobs/models
       - ${AIRFLOW_PROJ_DIR:-.}/checkpoints:/opt/spark-jobs/checkpoints
     image: spark-cnn-job
-    command: ["echo", "Spark job image built"]
-    networks:
-      - absa_network
-
+    command: ["echo", "Hello"]
 volumes:
   postgres-db-volume:
 networks:
