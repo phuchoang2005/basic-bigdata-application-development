@@ -8,7 +8,9 @@ Hệ thống xử lý dữ liệu thời gian thực (real-time streaming) cho b
 
 Hướng dẫn chạy hệ thống:
 
+0\. Chạy file init.sh
 
+0.5\, Tạo file .env thực hiện tạo hai biến AIRFLOW_UID và AIRFLOW_PROJ_DIR (với biến này ta thực hiện ánh xạ địa chỉ tuyệt đối của thư mục dự án trên máy host)
 
 1\. Giải nén file project (airflow.zip) vào bất kỳ vị trí nào trên máy (ví dụ D:\\BigData\\airflow\\).
 
@@ -101,4 +103,3 @@ Học phần: SE363 – Phát triển ứng dụng trên nền tảng dữ liệ
 Ngành Kỹ thuật phần mềm – Trường Đại học Công nghệ Thông tin, ĐHQG-HCM  
 
 Thực hiện bởi: HopDT – Faculty of Software Engineering, University of Information Technology (FSE-UIT)
-

@@ -1,0 +1,2 @@
+mkdir checkpoints
+mkdir logs
