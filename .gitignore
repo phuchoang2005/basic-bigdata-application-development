@@ -18,6 +18,7 @@ logs
 *.pyd
 *.db
 *.sqlite3
+checkpoints
 
 # Bỏ qua thư mục của công cụ build/distribution
 build/
