@@ -59,7 +59,7 @@ services:
       timeout: 10s
       retries: 5
       start_period: 240s
-    restart: always
+    restart: unless-stopped
     depends_on:
       <<: *airflow-common-depends-on
       airflow-init:
@@ -211,7 +211,8 @@ services:
       - ${AIRFLOW_PROJ_DIR:-.}/models:/opt/spark-jobs/models
       - ${AIRFLOW_PROJ_DIR:-.}/checkpoints:/opt/spark-jobs/checkpoints
     image: spark-cnn-job
-    command: ["echo", "Hello"]
+    networks:
+      - absa_network
 volumes:
   postgres-db-volume:
 networks:

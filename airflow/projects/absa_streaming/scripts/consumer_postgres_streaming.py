@@ -251,20 +251,18 @@ def write_to_postgres(batch_df: DataFrame, batch_id: int):
 def create_spark_session() -> SparkSession:
     """Khởi tạo và trả về một SparkSession."""
     print("Pipeline: Đang tạo Spark session...")
+    jars_list = [
+        "/opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.2.jar",
+        "/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.2.jar",
+        "/opt/spark/jars/kafka-clients-3.5.1.jar,/opt/spark/jars/commons-pool2-2.12.0.jar",
+        "/opt/spark/jars/postgresql-42.6.0.jar",
+    ]
     spark = (
         SparkSession.builder.appName("Kafka_ABSA_Postgres_CNN")
         .config("spark.sql.streaming.checkpointLocation", CHECKPOINT_PATH)
         .config(
-            "spark.jars.packages",
-            ",".join(
-                [
-                    "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.2",
-                    "org.apache.spark:spark-token-provider-kafka-0-10_2.12:3.5.2",
-                    "org.apache.kafka:kafka-clients:3.5.1",
-                    "org.apache.commons:commons-pool2:2.12.0",
-                    "org.postgresql:postgresql:42.6.0",
-                ]
-            ),
+            "spark.jars",
+            ",".join(jars_list),
         )
         .getOrCreate()
     )

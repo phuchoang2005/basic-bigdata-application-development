@@ -29,6 +29,7 @@ ARG HADOOP_VERSION=3
 ARG SCALA_VERSION=2.12
 ARG KAFKA_CLIENT_VERSION=3.5.1
 ARG POSTGRES_VERSION=42.6.0
+ARG COMMON_POOL2=2.12.0
 
 ENV SPARK_HOME=/opt/spark
 ENV PATH="$SPARK_HOME/bin:$PATH"
@@ -47,65 +48,21 @@ RUN \
     wget -q "https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-token-provider-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar" && \
     wget -q "https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/${KAFKA_CLIENT_VERSION}/kafka-clients-${KAFKA_CLIENT_VERSION}.jar" && \
     wget -q "https://repo1.maven.org/maven2/org/apache/kafka/kafka_${SCALA_VERSION}/${KAFKA_CLIENT_VERSION}/kafka_${SCALA_VERSION}-${KAFKA_CLIENT_VERSION}.jar" && \
-    wget -q "https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar"
+    wget -q "https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" && \
+    wget -q "https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/${COMMON_POOL2}/commons-pool2-${COMMON_POOL2}.jar"
 
 WORKDIR /opt/spark-jobs
 
 # ===== Install Python dependencies =====
 COPY base/spark-job/requirements.txt /tmp/spark_requirements.txt
-RUN pip install --no-cache-dir -r /tmp/spark_requirements.txt
-RUN pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -r /tmp/spark_requirements.txt && \
+    pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
 
 # ===== Patch kafka.vendor.six.moves lỗi thần thánh =====
 # after pip install in venv
 # ensure six and patch kafka package imports robustly using python
-RUN /opt/venv/bin/pip install --no-cache-dir six || true && \
-    /opt/venv/bin/python - <<'PY' || true
-import importlib, pathlib, sys, pkgutil
-patched = []
-# Try direct module location
-try:
-    import kafka
-    base = pathlib.Path(kafka.__file__).parent
-    # target file
-    p = base / "codec.py"
-    if p.exists():
-        txt = p.read_text()
-        new = txt.replace("from kafka.vendor.six.moves import range", "from six.moves import range")
-        new = new.replace("from kafka.vendor.six import", "from six import")
-        if new != txt:
-            p.write_text(new)
-            print("Patched", p)
-            patched.append(str(p))
-except Exception as e:
-    pass
-
-# also scan site-packages inside venv for any other references
-import glob, re
-site_libs = list(glob.glob("/opt/venv/lib/python*/site-packages"))
-for lib in site_libs:
-    import os
-    for root,_,files in os.walk(lib):
-        for f in files:
-            if f.endswith(".py"):
-                fp = os.path.join(root,f)
-                s = open(fp, "r", encoding="utf-8", errors="ignore").read()
-                s2 = s.replace("from kafka.vendor.six.moves import range", "from six.moves import range")
-                s2 = s2.replace("kafka.vendor.six", "six")
-                if s2 != s:
-                    open(fp,"w", encoding="utf-8").write(s2)
-                    patched.append(fp)
-if patched:
-    print("Patched files count:", len(patched))
-else:
-    print("No files patched")
-PY
-
-# ============================
-# Add commons-pool2 2.12.0
-# ============================
-RUN wget -q https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.12.0/commons-pool2-2.12.0.jar \
-    -O /opt/spark/jars/commons-pool2-2.12.0.jar
-
+COPY base/spark-job/fix_kafka_vendor_six_moves.py /tmp/fix_kafka_vendor_six_moves.py
+RUN pip install --no-cache-dir six || true && \
+    python /tmp/fix_kafka_vendor_six_moves.py
 
 CMD ["sleep", "infinity"]

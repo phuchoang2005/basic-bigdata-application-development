@@ -61,7 +61,6 @@ with DAG(
         image="spark-cnn-job:latest",
         command="spark-submit \
             --master local[*] \
-            --jars /opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.2.jar,/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.2.jar,/opt/spark/jars/kafka-clients-3.5.1.jar,/opt/spark/jars/commons-pool2-2.12.0.jar,/opt/spark/jars/postgresql-42.6.0.jar \
             /opt/spark-jobs/projects/scripts/consumer_postgres_streaming.py",
         network_mode="airflow_absa_network",
         auto_remove=True,

@@ -11,7 +11,7 @@ __pycache__/
 
 # Bỏ qua file log, cache, dữ liệu tạm
 *.log
-/logs
+logs
 *.pot
 *.pyc
 *.pyo
