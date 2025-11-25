@@ -1,18 +1,18 @@
+version: '3.9'
+
 services:
+
   zookeeper:
     image: zookeeper:3.8
-    container_name: zookeeper-non-mongo
     environment:
-      ZOOKEEPER_CLIENT_PORT: ${zookeeper_port}
-      ZOOKEEPER_TICK_TIME: "2000"
-    networks:
-      - kafka-network
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    container_name: kafka-non-mongo
     ports:
-      - "${kafka_port}:9092"
+      - "9092:9092"
     environment:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
@@ -20,26 +20,29 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
       KAFKA_BROKER_ID: "1"
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${zookeeper_port}
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     depends_on:
       - zookeeper
-    networks:
-      - kafka-network
-
-  pyspark-app:
-    build: .
-    container_name: pyspark-app
+ 
+  producer:
+    build: ./producer
+    container_name: video-producer
     depends_on:
       - kafka
-    ports:
-      - ${main_container_port}:8888
-    volumes:
-      - ./code:/home/jovyan/work
     environment:
-      - SPARK_MASTER_URL=local[*]
-    networks:
-      - kafka-network
-networks:
-  kafka-network:
-    driver: bridge
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TOPIC_NAME: video-stream
+    restart: always
+
+  consumer:
+    build: ./consumer
+    container_name: video-consumer
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TOPIC_NAME: video-stream
+    ports:
+      - "5000:5000"   # Flask streaming
+    restart: always

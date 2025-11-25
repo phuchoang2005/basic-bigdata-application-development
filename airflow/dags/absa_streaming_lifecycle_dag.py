@@ -42,16 +42,26 @@ with DAG(
     # === 1️⃣ Khởi động Producer ===
     # Tác vụ này vẫn chạy OK vì producer là script python nhẹ
     # và image 'airflow-base-local' có kafka-python.
-    deploy_producer = BashOperator(
-        task_id="deploy_producer",
-        # Giả định script này tự động dừng sau 45m hoặc 'timeout' sẽ ngắt nó
-        bash_command="""
-                chmod +x /opt/airflow/projects/scripts/run_producer.sh
-                timeout 45m /opt/airflow/projects/scripts/run_producer.sh
-            """,
-        retries=3,
+    deploy_producer = DockerOperator(
+        task_id="deploy_producer_spark",
+        image="spark-cnn-job:latest",
+        command="python /opt/spark-jobs/projects/scripts/producer.py",
+        network_mode="airflow_absa_network",
+        auto_remove=True,
+        mounts=[
+            Mount(
+                source=PROJECT_PATH,
+                target="/opt/spark-jobs/projects",
+                type="bind",
+            ),
+        ],
+        docker_url="unix://var/run/docker.sock",
+        retries=5,
+        retry_delay=timedelta(minutes=2),
         execution_timeout=timedelta(minutes=50),
+        mount_tmp_dir=False,
     )
+
 
     # === 2️⃣ Khởi động Consumer (Spark Job) bằng DockerOperator ===
     # ĐÂY LÀ THAY ĐỔI QUAN TRỌNG NHẤT

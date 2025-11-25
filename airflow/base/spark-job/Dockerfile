@@ -24,12 +24,13 @@ ENV PYSPARK_PYTHON=/opt/venv/bin/python
 ENV PYSPARK_DRIVER_PYTHON=/opt/venv/bin/python
 
 # Install Spark
-ARG SPARK_VERSION=3.5.2
+ARG SPARK_VERSION=3.5.3
 ARG HADOOP_VERSION=3
 ARG SCALA_VERSION=2.12
 ARG KAFKA_CLIENT_VERSION=3.5.1
 ARG POSTGRES_VERSION=42.6.0
-ARG COMMON_POOL2=2.12.0
+ARG COMMON_POOL2_VERSION=2.12.0
+ARG SPARK_KAFKA_CONNECTOR_VERSION=3.5.3
 
 ENV SPARK_HOME=/opt/spark
 ENV PATH="$SPARK_HOME/bin:$PATH"
@@ -44,19 +45,20 @@ RUN wget -q "https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-
 WORKDIR $SPARK_HOME/jars
 
 RUN \
-    wget -q "https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-sql-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar" && \
+    wget -q "https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_${SCALA_VERSION}/${SPARK_KAFKA_CONNECTOR_VERSION}/spark-sql-kafka-0-10_${SCALA_VERSION}-${SPARK_KAFKA_CONNECTOR_VERSION}.jar" && \
     wget -q "https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-token-provider-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar" && \
     wget -q "https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/${KAFKA_CLIENT_VERSION}/kafka-clients-${KAFKA_CLIENT_VERSION}.jar" && \
     wget -q "https://repo1.maven.org/maven2/org/apache/kafka/kafka_${SCALA_VERSION}/${KAFKA_CLIENT_VERSION}/kafka_${SCALA_VERSION}-${KAFKA_CLIENT_VERSION}.jar" && \
     wget -q "https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRES_VERSION}/postgresql-${POSTGRES_VERSION}.jar" && \
-    wget -q "https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/${COMMON_POOL2}/commons-pool2-${COMMON_POOL2}.jar"
+    wget -q "https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/${COMMON_POOL2_VERSION}/commons-pool2-${COMMON_POOL2_VERSION}.jar"
 
 WORKDIR /opt/spark-jobs
 
 # ===== Install Python dependencies =====
 COPY base/spark-job/requirements.txt /tmp/spark_requirements.txt
 RUN pip install --no-cache-dir -r /tmp/spark_requirements.txt && \
-    pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+    pip install torch==2.3.0 
+#--index-url https://download.pytorch.org/whl/cp
 
 # ===== Patch kafka.vendor.six.moves lỗi thần thánh =====
 # after pip install in venv

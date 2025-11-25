@@ -43,6 +43,7 @@ CHECKPOINT_PATH = "/opt/spark-jobs/checkpoints/absa_streaming_checkpoint"
 VOCAB_PATH = "/opt/spark-jobs/models/vocab.json"
 MODEL_PATH = "/opt/spark-jobs/models/cnn_best.pth"
 
+
 # Cấu hình model
 # các hằng số (sửa để khớp với training)
 EMBED_DIM = 128  # TRAIN dùng 128
@@ -251,13 +252,25 @@ def write_to_postgres(batch_df: DataFrame, batch_id: int):
 def create_spark_session() -> SparkSession:
     """Khởi tạo và trả về một SparkSession."""
     print("Pipeline: Đang tạo Spark session...")
+
+    SPARK_VERSION = '3.5.3'
+    SCALA_VERSION = '2.12'
+    POSTGRES_DRIVER_VERSION = '42.6.0'
+    COMMON_POOL2_VERSION = '2.12.0'
+    KAFKA_CLIENT_VERSION = '3.5.1'
+    KAFKA_SPARK_CONNECTOR_VERSION = '3.5.3'
+
     jars_list = [
-        "/opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.2.jar",
-        "/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.2.jar",
-        "/opt/spark/jars/kafka-clients-3.5.1.jar",
-        "/opt/spark/jars/commons-pool2-2.12.0.jar",
-        "/opt/spark/jars/postgresql-42.6.0.jar",
+        f"/spark-sql-kafka-0-10_{SCALA_VERSION}-{KAFKA_SPARK_CONNECTOR_VERSION}.jar",
+        f"/spark-token-provider-kafka-0-10_{SCALA_VERSION}-{SPARK_VERSION}.jar",
+        f"/kafka-clients-{KAFKA_CLIENT_VERSION}.jar",
+        f"/commons-pool2-{COMMON_POOL2_VERSION}.jar",
+        f"/postgresql-{POSTGRES_DRIVER_VERSION}.jar",
     ]
+
+    SPARK_JARS_DIR = "/opt/spark/jars"
+    jars_list = [SPARK_JARS_DIR + p for p in jars_list]
+
     spark = (
         SparkSession.builder.appName("Kafka_ABSA_Postgres_CNN")
         .config("spark.sql.streaming.checkpointLocation", CHECKPOINT_PATH)

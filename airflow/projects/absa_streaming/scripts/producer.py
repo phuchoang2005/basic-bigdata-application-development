@@ -18,8 +18,8 @@ from kafka.errors import TopicAlreadyExistsError
 # --- Cấu hình ---
 KAFKA_SERVER = "kafka:9092"  # dùng hostname trong docker network
 TOPIC = "absa-reviews"
-CSV_PATH = "/opt/airflow/projects/data/test_data.csv"
-DELAY = 2.0  # giây giữa mỗi message
+CSV_PATH = "/opt/spark-jobs/projects/data/test_data.csv"
+DELAY = 0.5  # giây giữa mỗi message
 
 # --- Đảm bảo topic tồn tại ---
 try:

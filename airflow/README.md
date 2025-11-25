@@ -1,38 +1,26 @@
 Big Data Streaming ABSA System (Airflow – Spark – Kafka – PostgreSQL – Streamlit)
 
-
-
 Hệ thống xử lý dữ liệu thời gian thực (real-time streaming) cho bài toán phân tích cảm xúc theo chủ đề (Aspect-Based Sentiment Analysis – ABSA). Pipeline sử dụng Kafka để truyền dữ liệu, Spark Structured Streaming để xử lý, Airflow để điều phối, PostgreSQL làm nơi lưu kết quả, và Streamlit để hiển thị dashboard real-time. Sinh viên cần tự build môi trường Docker và chạy hệ thống để quan sát toàn bộ vòng đời của pipeline.
-
-
 
 Hướng dẫn chạy hệ thống:
 
 0\. Chạy file init.sh
 
-0.5\, Tạo file .env thực hiện tạo hai biến AIRFLOW_UID và AIRFLOW_PROJ_DIR (với biến này ta thực hiện ánh xạ địa chỉ tuyệt đối của thư mục dự án trên máy host)
+0.5\, Tạo file .env thực hiện tạo hai biến AIRFLOW_UID và AIRFLOW_PROJ_DIR (với biến này ta thực hiện ánh xạ địa chỉ tuyệt đối của thư mục dự án trên máy host) and GROUP_ID (RUN COMMAND "getent group docker")
 
 1\. Giải nén file project (airflow.zip) vào bất kỳ vị trí nào trên máy (ví dụ D:\\BigData\\airflow\\).
-
-
 
 2\. Mở PowerShell và chuyển vào thư mục project:
 
 cd D:\\BigData\\airflow
 
-
-
 3\. Build lại toàn bộ image (làm lần đầu):
 
 docker compose build --no-cache
 
-
-
 4\. Khởi động toàn bộ hệ thống:
 
 docker compose up -d
-
-
 
 5\. Mở web app để kiểm tra:
 
@@ -44,21 +32,15 @@ docker compose up -d
 
 &nbsp; password: airflow
 
-&nbsp; Trong Airflow, bật DAG có tên absa\_streaming\_lifecycle\_demo, sau đó trigger thủ công (Run) để khởi động pipeline streaming gồm producer, consumer và các tác vụ giám sát.
-
-
+&nbsp; Trong Airflow, bật DAG có tên absa_streaming_lifecycle_demo, sau đó trigger thủ công (Run) để khởi động pipeline streaming gồm producer, consumer và các tác vụ giám sát.
 
 \- Streamlit Dashboard: truy cập http://localhost:8501
 
 &nbsp; Ứng dụng hiển thị kết quả phân tích cảm xúc theo thời gian, theo chủ đề (aspect), và thống kê cảm xúc tổng hợp trong cơ sở dữ liệu. Dữ liệu sẽ tự hiển thị sau từ PostgreSQL.
 
-
-
 6\. Dừng hệ thống:
 
 docker compose down
-
-
 
 Lưu ý:
 
@@ -74,8 +56,6 @@ Lưu ý:
 
 docker compose up -d
 
-
-
 Cấu trúc thư mục chính:
 
 C:\\airflow
@@ -88,7 +68,7 @@ C:\\airflow
 
 ├── models\\ ← mô hình ABSA (.pt) hoặc file dummy để chạy thử
 
-├── projects\\absa\_streaming\\ ← code xử lý producer, consumer, streamlit app
+├── projects\\absa_streaming\\ ← code xử lý producer, consumer, streamlit app
 
 ├── logs\\ ← log runtime của Airflow
 
@@ -96,10 +76,8 @@ C:\\airflow
 
 └── README.md
 
+Học phần: SE363 – Phát triển ứng dụng trên nền tảng dữ liệu lớn
 
-
-Học phần: SE363 – Phát triển ứng dụng trên nền tảng dữ liệu lớn  
-
-Ngành Kỹ thuật phần mềm – Trường Đại học Công nghệ Thông tin, ĐHQG-HCM  
+Ngành Kỹ thuật phần mềm – Trường Đại học Công nghệ Thông tin, ĐHQG-HCM
 
 Thực hiện bởi: HopDT – Faculty of Software Engineering, University of Information Technology (FSE-UIT)
