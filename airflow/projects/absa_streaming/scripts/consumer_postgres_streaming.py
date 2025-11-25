@@ -254,7 +254,8 @@ def create_spark_session() -> SparkSession:
     jars_list = [
         "/opt/spark/jars/spark-sql-kafka-0-10_2.12-3.5.2.jar",
         "/opt/spark/jars/spark-token-provider-kafka-0-10_2.12-3.5.2.jar",
-        "/opt/spark/jars/kafka-clients-3.5.1.jar,/opt/spark/jars/commons-pool2-2.12.0.jar",
+        "/opt/spark/jars/kafka-clients-3.5.1.jar",
+        "/opt/spark/jars/commons-pool2-2.12.0.jar",
         "/opt/spark/jars/postgresql-42.6.0.jar",
     ]
     spark = (
