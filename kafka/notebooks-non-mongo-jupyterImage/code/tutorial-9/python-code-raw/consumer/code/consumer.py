@@ -10,9 +10,12 @@ consumer = KafkaConsumer(
     topic, 
     bootstrap_servers=kafka_server)
 
-
 # Set the consumer in a Flask App
 app = Flask(__name__)
+
+@app.route('/health')
+def checkHealth():
+    return "OK", 200
 
 @app.route('/', methods=['GET'])
 def video():

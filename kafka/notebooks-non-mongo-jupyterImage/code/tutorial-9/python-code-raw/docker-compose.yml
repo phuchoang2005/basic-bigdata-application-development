@@ -13,6 +13,7 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     ports:
       - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
@@ -32,17 +33,20 @@ services:
       - kafka
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      TOPIC_NAME: video-stream
+    volumes:
+      - ./video:/video
+      - ./producer/code:/app
     restart: always
 
   consumer:
     build: ./consumer
     container_name: video-consumer
+    volumes:
+      - ./consumer/code:/app
     depends_on:
       - kafka
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      TOPIC_NAME: video-stream
     ports:
-      - "5000:5000"   # Flask streaming
+      - "5001:5000"   # Flask streaming
     restart: always
